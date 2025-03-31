@@ -118,20 +118,21 @@
   <div class="art-grid">
     {% for art in artworks %}
       <div class="art-item">
-        <img src="data:image/jpeg;base64,{{ art[10] }}">
-        <h4>{{ art[1] }}
-          {% if art[8] == 'Booked' %}
+        <img src="{{ art.image_url }}" alt="Artwork">
+        <h4>{{ art.title or "Untitled" }}
+          {% if art.status == 'Booked' %}
             <span class="badge badge-red">Sold</span>
           {% else %}
             <span class="badge badge-green">Available</span>
           {% endif %}
         </h4>
-        <p><strong>Price:</strong> ${{ art[3] }} | 🌍 {{ art[9] }}</p>
-        <p><strong>Color:</strong> {{ art[5] }} | <a href="{{ art[6] }}" target="_blank">Palette</a></p>
-        <p><strong>Auth:</strong> {{ art[4] }}</p>
-        <p><strong>Description:</strong> {{ art[7] }}</p>
-        {% if art[8] != 'Booked' %}
-          <form action="{{ url_for('buy_art', art_id=art[0]) }}" method="get">
+        <p><strong>💰 Price:</strong> ${{ art.price or "Not Available" }} | 🌍 {{ art.currency_price or "" }}</p>
+        <p><strong>🔐 Auth:</strong> {{ art.authenticity or "Unknown" }}</p>
+        <p><strong>🎨 Color:</strong> {{ art.caption or "N/A" }} |
+           <a href="{{ art.color_url or '#' }}" target="_blank">Palette</a></p>
+        <p><strong>🧠 Description:</strong> {{ art.vision_desc or "Could not generate" }}</p>
+        {% if art.status != 'Booked' %}
+          <form action="{{ url_for('buy_art', art_id=art.id) }}" method="get">
             <button class="btn">Mark as Sold</button>
           </form>
         {% endif %}
