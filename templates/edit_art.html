@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Buyer Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="card">
+  <h2>🛍️ Buyer Dashboard</h2>
+  <h3>Available Artworks</h3>
+  {% for art in artworks %}
+    <div class="art-item {% if art[8] == 'Booked' %}sold{% endif %}">
+      <img src="{{ art[10] }}" class="thumb"><br>
+      <strong>{{ art[1] }}</strong>
+      {% if art[8] == 'Booked' %}
+        <span class="badge badge-red">Booked</span>
+      {% else %}
+        <span class="badge badge-green">Available</span>
+      {% endif %}<br>
+      💰 USD: ${{ art[3] }} | 🌍 {{ art[9] }}<br>
+      🔐 {{ art[4] }} | 🎨 <a href="{{ art[6] }}" target="_blank">Palette</a><br>
+      🧠 {{ art[7] }}<br>
+      {% if art[8] != 'Booked' %}
+        <a href="{{ url_for('buy_art', art_id=art[0]) }}" class="btn-small">🛒 Buy</a>
+      {% endif %}
+    </div>
+  {% endfor %}
+  <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+</div>
+</body>
+</html>

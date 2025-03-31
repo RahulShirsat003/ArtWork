@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ArtSeller Platform - Home</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #fdfbfb, #ebedee);
+    }
+
+    .container {
+      text-align: center;
+      margin-top: 120px;
+    }
+
+    h1 {
+      font-size: 36px;
+      color: #333;
+    }
+
+    p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .btn {
+      padding: 12px 25px;
+      margin: 10px;
+      background-color: #4a3aff;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .btn:hover {
+      background-color: #372bc7;
+    }
+
+    /* NAVBAR CSS (from earlier) */
+    .navbar {
+      background-color: #4a3aff;
+      color: white;
+      padding: 12px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar .nav-left {
+      font-size: 20px;
+    }
+
+    .navbar .nav-right a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .navbar .nav-right a:hover {
+      color: #ffd700;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">🎨 <strong>ArtSeller</strong></div>
+    <div class="nav-right">
+      <a href="/">Home</a>
+      <a href="/login">Login</a>
+      <a href="/register">Register</a>
+      {% if session.get("user") %}
+        <a href="/dashboard">Dashboard</a>
+        <a href="/logout">Logout</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1>Welcome to ArtSeller 🖼️</h1>
+    <p>Buy, Sell, and Authenticate Artwork with Smart AI.</p>
+    <a href="/login" class="btn">Login</a>
+    <a href="/register" class="btn">Register</a>
+  </div>
+</body>
+</html>

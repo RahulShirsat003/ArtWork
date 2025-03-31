@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Seller Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #fff4f4, #f4f8ff);
+    }
+
+    .navbar {
+      background-color: #4a3aff;
+      color: white;
+      padding: 12px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar .nav-left {
+      font-size: 20px;
+    }
+
+    .navbar .nav-right a {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: 500;
+    }
+
+    .navbar .nav-right a:hover {
+      color: #ffd700;
+    }
+
+    .container {
+      padding: 30px;
+    }
+
+    form {
+      max-width: 400px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .btn {
+      background-color: #4a3aff;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background-color: #372bc7;
+    }
+
+    .gallery {
+      margin-top: 40px;
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-bottom: 20px;
+    }
+
+    .card {
+      flex: 0 0 350px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .card img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .badge-green {
+      background: #28a745;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .badge-red {
+      background: #dc3545;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .delete-btn {
+      background-color: #e63946;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .delete-btn:hover {
+      background-color: #c62828;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-left">🎨 <strong>ArtSeller</strong></div>
+  <div class="nav-right">
+    <a href="/">Home</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/logout">Logout</a>
+  </div>
+</nav>
+
+<div class="container">
+  <h2 style="text-align:center; color:#333;">Upload New Artwork</h2>
+  <form method="POST" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Artwork Title" required>
+    <input type="file" name="image" required>
+    <button class="btn" type="submit">Upload & Analyze</button>
+  </form>
+
+  <h3 style="margin-top: 50px; color: #444;">Your Art Collection</h3>
+  <div class="gallery">
+    {% for art in artworks %}
+      <div class="card">
+        <img src="data:image/jpeg;base64,{{ art[10] }}">
+        <h4>{{ art[1] }}
+          {% if art[8] == 'Booked' %}
+            <span class="badge-red">Sold</span>
+          {% else %}
+            <span class="badge-green">Available</span>
+          {% endif %}
+        </h4>
+        <p><strong>Price:</strong> ${{ art[3] }} | {{ art[9] }}</p>
+        <p><strong>Auth:</strong> {{ art[4] }}</p>
+        <p><strong>Color:</strong> {{ art[5] }} | <a href="{{ art[6] }}" target="_blank">Palette</a></p>
+        <p><strong>Description:</strong> {{ art[7] }}</p>
+        <a href="{{ url_for('delete_art', art_id=art[0]) }}">
+          <button class="delete-btn">🗑️ Delete</button>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+</body>
+</html>
