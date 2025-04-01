@@ -56,19 +56,18 @@
 
     .art-grid {
       display: flex;
-      flex-wrap: nowrap;
-      overflow-x: auto;
+      flex-wrap: wrap;
       gap: 20px;
+      justify-content: center;
       padding-bottom: 20px;
     }
 
     .art-item {
-      flex: 0 0 350px;
+      width: 320px;
       background: white;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
-      min-width: 300px;
     }
 
     .art-item img {
@@ -106,6 +105,9 @@
       font-weight: bold;
       margin-top: 10px;
       width: 100%;
+      display: inline-block;
+      text-align: center;
+      text-decoration: none;
     }
 
     .btn:hover {
@@ -132,11 +134,15 @@
     <button type="submit">Upload</button>
   </form>
 
+  {% if error %}
+    <p style="text-align: center; color: red;"><strong>{{ error }}</strong></p>
+  {% endif %}
+
   <h2>Your Artworks 🧑‍🎨</h2>
   <div class="art-grid">
     {% for art in artworks %}
       <div class="art-item">
-        <img src="{{ art.image_url }}" alt="Artwork">
+        <img src="{{ url_for('static', filename=art.image_url) }}" alt="Artwork">
         <h4>{{ art.title or "Untitled" }}
           {% if art.status == 'Booked' %}
             <span class="badge badge-red">Sold</span>
@@ -146,10 +152,10 @@
         </h4>
         <p><strong>💰 Price:</strong> ${{ art.price or "Not Available" }} | 🌍 {{ art.currency_price or "" }}</p>
         <p><strong>🔐 Auth:</strong> {{ art.authenticity or "Unknown" }}</p>
-        <p><strong>🎨 Color:</strong> {{ art.caption or "N/A" }} | 
+        <p><strong>🎨 Color:</strong> {{ art.caption or "N/A" }} |
            <a href="{{ art.color_url or '#' }}" target="_blank">Palette</a></p>
         <p><strong>🧠 Description:</strong> {{ art.vision_desc or "Could not generate" }}</p>
-        <a href="/delete/{{ art.id }}"><button class="btn">Delete</button></a>
+        <a href="{{ url_for('delete_art', art_id=art.id) }}" class="btn">Delete</a>
       </div>
     {% endfor %}
   </div>
