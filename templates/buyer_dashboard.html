@@ -118,7 +118,7 @@
   <div class="art-grid">
     {% for art in artworks %}
       <div class="art-item">
-        <img src="{{ art['image_url'] }}" alt="Artwork Image">
+        <img src="{{ url_for('static', filename=art.image_url) }}" alt="Artwork">
         <h4>{{ art['title'] or "Untitled" }}
           {% if art['status'] == 'Booked' %}
             <span class="badge badge-red">Sold</span>
