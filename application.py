@@ -1,30 +1,29 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, send_from_directory
 import sqlite3, uuid, base64, requests, io, os
 from PIL import Image
 from decimal import Decimal
-import tempfile
-import logging
 from dotenv import load_dotenv
+
 load_dotenv()
 
 application = Flask(__name__)
 application.secret_key = 'supersecretkey'
 
-# 📁 Local file saving instead of S3
-UPLOAD_FOLDER = 'ArtWork/static/uploads'
+# Local file saving path for Elastic Beanstalk (safe persistent directory)
+# Local uploads folder within project directory
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
+    
 # External APIs
 PRICE_API = "https://gi96frqbc5.execute-api.eu-west-1.amazonaws.com"
 AUTH_API = "https://rf83t8chb1.execute-api.eu-west-1.amazonaws.com"
 GEO_API = "https://ipapi.co/json/"
 CURRENCY_API = "https://api.exchangerate-api.com/v4/latest/USD"
 
-# SQLite DB Path
+# SQLite DB
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.db")
 
-# 🧱 Init DB
 def init_db():
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
@@ -54,14 +53,17 @@ def init_db():
 
 init_db()
 
-# 💾 Save image locally
+# Save image locally and return its public URL
 def save_image_locally(image_bytes, filename):
     filepath = os.path.join(UPLOAD_FOLDER, filename)
     with open(filepath, 'wb') as f:
         f.write(image_bytes)
-    return f"uploads/{filename}"
+    return url_for('uploaded_file', filename=filename)
 
-# 🧠 Caption API (still huggingface or fallback text)
+@application.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
 def huggingface_caption(image_bytes):
     try:
         HF_TOKEN = os.getenv("HF_API_KEY", "")
@@ -81,7 +83,6 @@ def huggingface_caption(image_bytes):
         print("Caption Error:", e)
     return "Could not generate description"
 
-# 💱 Currency Conversion
 def get_currency_conversion(price_usd):
     try:
         geo = requests.get(GEO_API).json()
@@ -93,12 +94,10 @@ def get_currency_conversion(price_usd):
         print("Currency Conversion Error:", e)
         return f"{price_usd} USD"
 
-# 🏠 Home
 @application.route('/')
 def home():
     return render_template("home.html")
 
-# 🔐 Register
 @application.route('/register', methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -115,7 +114,6 @@ def register():
                 return render_template("register.html", error="Username already exists")
     return render_template("register.html")
 
-# 🔐 Login
 @application.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -134,7 +132,6 @@ def login():
             return render_template("login.html", error="Invalid credentials")
     return render_template("login.html")
 
-# 📊 Dashboard
 @application.route('/dashboard', methods=["GET", "POST"])
 def dashboard():
     if "user" not in session:
@@ -155,33 +152,26 @@ def dashboard():
                 image_bytes = image.read()
                 b64img = base64.b64encode(image_bytes).decode()
 
-                # Price API
                 price_resp = requests.post(PRICE_API, json={"file": b64img})
                 price_data = price_resp.json() if price_resp.status_code == 200 else {}
                 price = str(price_data.get("predicted_price", "Not Available"))
 
-                # Auth API
                 auth_resp = requests.post(AUTH_API, json={"file": b64img})
                 auth_data = auth_resp.json() if auth_resp.status_code == 200 else {}
                 auth = auth_data.get("status", "Unknown")
 
-                # Caption
                 vision = huggingface_caption(image_bytes)
 
-                # Color
                 avg = Image.open(io.BytesIO(image_bytes)).resize((1, 1)).getpixel((0, 0))
                 hex_color = '%02x%02x%02x' % avg
                 caption = f"Dominant color: RGB({avg[0]}, {avg[1]}, {avg[2]})"
                 color_url = f"https://www.thecolorapi.com/id?hex={hex_color}"
 
-                # Currency
                 currency_price = get_currency_conversion(price)
 
-                # Save locally
                 filename = f"{uuid.uuid4()}.jpg"
                 image_url = save_image_locally(image_bytes, filename)
 
-                # Store in DB
                 art_id = str(uuid.uuid4())
                 with sqlite3.connect(DB_PATH) as conn:
                     c = conn.cursor()
@@ -209,7 +199,6 @@ def dashboard():
             artworks = [dict(zip(columns, row)) for row in c.fetchall()]
         return render_template("buyer_dashboard.html", artworks=artworks)
 
-# 🛒 Buy
 @application.route('/buy/<art_id>')
 def buy_art(art_id):
     if "user" not in session or session["role"] != "buyer":
@@ -220,7 +209,6 @@ def buy_art(art_id):
         conn.commit()
     return redirect(url_for("dashboard"))
 
-# 🗑️ Delete
 @application.route('/delete/<art_id>')
 def delete_art(art_id):
     if "user" not in session or session["role"] != "seller":
@@ -228,17 +216,13 @@ def delete_art(art_id):
 
     with sqlite3.connect(DB_PATH) as conn:
         c = conn.cursor()
-
-        # Get image URL from DB
         c.execute("SELECT image_url FROM artworks WHERE id=?", (art_id,))
         row = c.fetchone()
 
         if row and row[0]:
             try:
-                # Safely extract filename and build full path
-                safe_filename = os.path.basename(row[0])
-                file_path = os.path.join(application.root_path, 'static', 'uploads', safe_filename)
-
+                filename = os.path.basename(row[0])
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
                 if os.path.exists(file_path):
                     os.remove(file_path)
                     print(f"✅ Deleted file: {file_path}")
@@ -247,17 +231,15 @@ def delete_art(art_id):
             except Exception as e:
                 print(f"❌ Error deleting image: {e}")
 
-        # Delete artwork record from DB
         c.execute("DELETE FROM artworks WHERE id=?", (art_id,))
         conn.commit()
 
     return redirect(url_for("dashboard"))
-# 🔓 Logout
+
 @application.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for("home"))
 
-# 🔧 Run Flask App
 if __name__ == "__main__":
     application.run(host="0.0.0.0", port=8080, debug=True)

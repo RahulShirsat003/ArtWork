@@ -130,7 +130,6 @@
         <p><strong>🔐 Auth:</strong> {{ art['authenticity'] or "Unknown" }}</p>
         <p><strong>🎨 Color:</strong> {{ art['caption'] or "N/A" }} |
            <a href="{{ art['color_url'] or '#' }}" target="_blank">Palette</a></p>
-        <p><strong>🧠 Description:</strong> {{ art['vision_desc'] or "Could not generate" }}</p>
         {% if art['status'] != 'Booked' %}
           <form action="{{ url_for('buy_art', art_id=art['id']) }}" method="get">
             <button class="btn">Mark as Sold</button>
